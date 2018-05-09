@@ -119,7 +119,8 @@ ignoredTranslations = ["Arabic Bible: Easy-to-Read Version (ERV-AR)", "Ketab El 
                        "The Westminster Leningrad Codex (WLC)", "Urdu Bible: Easy-to-Read Version (ERV-UR)",
                        "Hawai‘i Pidgin (HWP)"]
 
-getBooks():
+
+def getBooks():
     if res is not None:
         soup = BeautifulSoup(res.text, "html.parser")
 
@@ -182,6 +183,7 @@ getBooks():
         with open("books.txt", "w") as file:
             print("[info] Writing file...")
             file.write(json.dumps(bookNames))
+
 
 if __name__ == "__main__":
     getBooks()
