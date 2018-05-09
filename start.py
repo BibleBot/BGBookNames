@@ -16,10 +16,13 @@
     along with BGBookNames.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+from vylogger import VyLogger
 import requests
 import json
 import os
 from bs4 import BeautifulSoup
+
+logger = VyLogger("default")
 
 versionsURL = "https://www.biblegateway.com/versions/"
 
@@ -120,11 +123,25 @@ ignoredTranslations = ["Arabic Bible: Easy-to-Read Version (ERV-AR)", "Ketab El 
                        "Hawai‘i Pidgin (HWP)"]
 
 
+def logMessage(level, msg):
+    message = "[shard 0] <" + \
+        "BGBookNames@global> " + msg
+
+    if level == "warn":
+        logger.warning(message)
+    elif level == "err":
+        logger.error(message)
+    elif level == "info":
+        logger.info(message)
+    elif level == "debug":
+        logger.debug(message)
+
+
 def getBooks():
     if res is not None:
         soup = BeautifulSoup(res.text, "html.parser")
 
-        print("[info] Getting translations...")
+        logMessage("info", "Getting translations...")
 
         for translation in soup.findAll("td", {"class": ["collapse", "translation-name"]}):
             for a in translation.findAll("a", href=True):
@@ -136,7 +153,7 @@ def getBooks():
                     obj[version]["booklist"] = "https://www.biblegateway.com" + link
 
         if obj is not {}:
-            print("[info] Getting book names... (this will take a while)")
+            logMessage("info", "Getting book names... (this will take a while)")
             for item in obj:
                 booklistURL = obj[item]["booklist"]
                 bookRes = requests.get(booklistURL)
@@ -168,7 +185,8 @@ def getBooks():
                                     if tableField.text not in bookNames[book]:
                                         bookNames[book].append(tableField.text)
                             except KeyError:
-                                print("[err] found " + book + " in " + item)
+                                logMessage("err", "found " +
+                                           book + " in " + item)
                                 book = input(
                                     "[bfix] what should I rename this book to?")
 
@@ -177,11 +195,11 @@ def getBooks():
                                         bookNames[book].append(tableField.text)
 
         if os.path.isfile("books.txt"):
-            print("[info] Found books.txt, removing...")
+            logMessage("info", "Found books.txt, removing...")
             os.remove("books.txt")
 
         with open("books.txt", "w") as file:
-            print("[info] Writing file...")
+            logMessage("info", "Writing file...")
             file.write(json.dumps(bookNames))
 
 
