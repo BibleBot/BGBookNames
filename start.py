@@ -206,11 +206,11 @@ def getBooks():
                                     if tableField.text not in bookNames[book]:
                                         bookNames[book].append(tableField.text)
 
-        if os.path.isfile(dir_path + "/books.txt"):
-            logMessage("info", "Found books.txt, removing...")
-            os.remove(dir_path + "/books.txt")
+        if os.path.isfile(dir_path + "/books.json"):
+            logMessage("info", "Found books.json, removing...")
+            os.remove(dir_path + "/books.json")
 
-        with open(dir_path + "/books.txt", "w") as file:
+        with open(dir_path + "/books.json", "w") as file:
             logMessage("info", "Writing file...")
             file.write(json.dumps(bookNames))
 
