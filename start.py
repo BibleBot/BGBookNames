@@ -119,65 +119,69 @@ ignoredTranslations = ["Arabic Bible: Easy-to-Read Version (ERV-AR)", "Ketab El 
                        "The Westminster Leningrad Codex (WLC)", "Urdu Bible: Easy-to-Read Version (ERV-UR)",
                        "Hawai‘i Pidgin (HWP)"]
 
-if res is not None:
-    soup = BeautifulSoup(res.text, "html.parser")
+getBooks():
+    if res is not None:
+        soup = BeautifulSoup(res.text, "html.parser")
 
-    print("[info] Getting translations...")
+        print("[info] Getting translations...")
 
-    for translation in soup.findAll("td", {"class": ["collapse", "translation-name"]}):
-        for a in translation.findAll("a", href=True):
-            version = a.text
-            link = a["href"]
+        for translation in soup.findAll("td", {"class": ["collapse", "translation-name"]}):
+            for a in translation.findAll("a", href=True):
+                version = a.text
+                link = a["href"]
 
-            if "#booklist" in link and version not in ignoredTranslations:
-                obj[version] = {}
-                obj[version]["booklist"] = "https://www.biblegateway.com" + link
+                if "#booklist" in link and version not in ignoredTranslations:
+                    obj[version] = {}
+                    obj[version]["booklist"] = "https://www.biblegateway.com" + link
 
-    if obj is not {}:
-        print("[info] Getting book names... (this will take a while)")
-        for item in obj:
-            booklistURL = obj[item]["booklist"]
-            bookRes = requests.get(booklistURL)
+        if obj is not {}:
+            print("[info] Getting book names... (this will take a while)")
+            for item in obj:
+                booklistURL = obj[item]["booklist"]
+                bookRes = requests.get(booklistURL)
 
-            if bookRes is not None:
-                soup = BeautifulSoup(bookRes.text, "html.parser")
+                if bookRes is not None:
+                    soup = BeautifulSoup(bookRes.text, "html.parser")
 
-                table = soup.find("table", {"class": "chapterlinks"})
+                    table = soup.find("table", {"class": "chapterlinks"})
 
-                for tableField in table.findAll("td"):
-                    book = dict(tableField.attrs).get("data-target")
+                    for tableField in table.findAll("td"):
+                        book = dict(tableField.attrs).get("data-target")
 
-                    for chapterNumbers in tableField.findAll("span", {"class": "num-chapters"}):
-                        chapterNumbers.decompose()
+                        for chapterNumbers in tableField.findAll("span", {"class": "num-chapters"}):
+                            chapterNumbers.decompose()
 
-                    if not str(book) == "None":
-                        book = book[1:-5]
-                        classes = dict(tableField.attrs).get("class")
+                        if not str(book) == "None":
+                            book = book[1:-5]
+                            classes = dict(tableField.attrs).get("class")
 
-                        try:
-                            if book == "3macc":
-                                book = "3ma"
-                            elif book == "gkesth" or book == "adest":
-                                book = "gkest"
-                            elif book == "sgthree" or book == "sgthr":
-                                book = "praz"
+                            try:
+                                if book == "3macc":
+                                    book = "3ma"
+                                elif book == "gkesth" or book == "adest":
+                                    book = "gkest"
+                                elif book == "sgthree" or book == "sgthr":
+                                    book = "praz"
 
-                            if "book-name" in classes:
-                                if tableField.text not in bookNames[book]:
-                                    bookNames[book].append(tableField.text)
-                        except KeyError:
-                            print("[err] found " + book + " in " + item)
-                            book = input(
-                                "[bfix] what should I rename this book to?")
+                                if "book-name" in classes:
+                                    if tableField.text not in bookNames[book]:
+                                        bookNames[book].append(tableField.text)
+                            except KeyError:
+                                print("[err] found " + book + " in " + item)
+                                book = input(
+                                    "[bfix] what should I rename this book to?")
 
-                            if not book == "":
-                                if tableField.text not in bookNames[book]:
-                                    bookNames[book].append(tableField.text)
+                                if not book == "":
+                                    if tableField.text not in bookNames[book]:
+                                        bookNames[book].append(tableField.text)
 
-    if os.path.isfile("books.txt"):
-        print("[info] Found books.txt, removing...")
-        os.remove("books.txt")
+        if os.path.isfile("books.txt"):
+            print("[info] Found books.txt, removing...")
+            os.remove("books.txt")
 
-    with open("books.txt", "w") as file:
-        print("[info] Writing file...")
-        file.write(json.dumps(bookNames))
+        with open("books.txt", "w") as file:
+            print("[info] Writing file...")
+            file.write(json.dumps(bookNames))
+
+if __name__ == "__main__":
+    getBooks()
