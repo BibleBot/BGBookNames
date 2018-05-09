@@ -21,9 +21,9 @@ import json
 import os
 from bs4 import BeautifulSoup
 
-versions_url = "https://www.biblegateway.com/versions/"
+versionsURL = "https://www.biblegateway.com/versions/"
 
-book_names = {
+bookNames = {
     "gen": [],
     "exod": [],
     "lev": [],
@@ -110,49 +110,49 @@ book_names = {
     "4ma": [],
 }
 
-res = requests.get(versions_url)
+res = requests.get(versionsURL)
 
 obj = {}
 
-ignored_translations = ["Arabic Bible: Easy-to-Read Version (ERV-AR)", "Ketab El Hayat (NAV)",
-                        "Farsi New Testament", "Farsi Ebook Bible", "Habrit Hakhadasha/Haderekh (HHH)",
-                        "The Westminster Leningrad Codex (WLC)", "Urdu Bible: Easy-to-Read Version (ERV-UR)",
-                        "Hawai‘i Pidgin (HWP)"]
+ignoredTranslations = ["Arabic Bible: Easy-to-Read Version (ERV-AR)", "Ketab El Hayat (NAV)",
+                       "Farsi New Testament", "Farsi Ebook Bible", "Habrit Hakhadasha/Haderekh (HHH)",
+                       "The Westminster Leningrad Codex (WLC)", "Urdu Bible: Easy-to-Read Version (ERV-UR)",
+                       "Hawai‘i Pidgin (HWP)"]
 
 if res is not None:
     soup = BeautifulSoup(res.text, "html.parser")
 
     print("[info] Getting translations...")
 
-    for translation in soup.find_all("td", {"class": ["collapse", "translation-name"]}):
-        for a in translation.find_all("a", href=True):
+    for translation in soup.findAll("td", {"class": ["collapse", "translation-name"]}):
+        for a in translation.findAll("a", href=True):
             version = a.text
             link = a["href"]
 
-            if "#booklist" in link and version not in ignored_translations:
+            if "#booklist" in link and version not in ignoredTranslations:
                 obj[version] = {}
                 obj[version]["booklist"] = "https://www.biblegateway.com" + link
 
     if obj is not {}:
         print("[info] Getting book names... (this will take a while)")
         for item in obj:
-            booklist_url = obj[item]["booklist"]
-            book_res = requests.get(booklist_url)
+            booklistURL = obj[item]["booklist"]
+            bookRes = requests.get(booklistURL)
 
-            if book_res is not None:
-                soup = BeautifulSoup(book_res.text, "html.parser")
+            if bookRes is not None:
+                soup = BeautifulSoup(bookRes.text, "html.parser")
 
                 table = soup.find("table", {"class": "chapterlinks"})
 
-                for table_field in table.find_all("td"):
-                    book = dict(table_field.attrs).get("data-target")
+                for tableField in table.findAll("td"):
+                    book = dict(tableField.attrs).get("data-target")
 
-                    for chapter_numbers in table_field.find_all("span", {"class": "num-chapters"}):
-                        chapter_numbers.decompose()
+                    for chapterNumbers in tableField.findAll("span", {"class": "num-chapters"}):
+                        chapterNumbers.decompose()
 
                     if not str(book) == "None":
                         book = book[1:-5]
-                        classes = dict(table_field.attrs).get("class")
+                        classes = dict(tableField.attrs).get("class")
 
                         try:
                             if book == "3macc":
@@ -163,16 +163,16 @@ if res is not None:
                                 book = "praz"
 
                             if "book-name" in classes:
-                                if table_field.text not in book_names[book]:
-                                    book_names[book].append(table_field.text)
+                                if tableField.text not in bookNames[book]:
+                                    bookNames[book].append(tableField.text)
                         except KeyError:
                             print("[err] found " + book + " in " + item)
                             book = input(
                                 "[bfix] what should I rename this book to?")
 
                             if not book == "":
-                                if table_field.text not in book_names[book]:
-                                    book_names[book].append(table_field.text)
+                                if tableField.text not in bookNames[book]:
+                                    bookNames[book].append(tableField.text)
 
     if os.path.isfile("books.txt"):
         print("[info] Found books.txt, removing...")
@@ -180,4 +180,4 @@ if res is not None:
 
     with open("books.txt", "w") as file:
         print("[info] Writing file...")
-        file.write(json.dumps(book_names))
+        file.write(json.dumps(bookNames))
