@@ -16,7 +16,6 @@
     along with BGBookNames.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-from vylogger import VyLogger
 import requests
 import json
 import os
@@ -32,6 +31,8 @@ logging.getLogger("urllib3.connectionpool").setLevel(logging.WARNING)
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(dir_path + "/")
+
+from vylogger import VyLogger
 
 logger = VyLogger("default")
 
