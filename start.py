@@ -20,9 +20,18 @@ from vylogger import VyLogger
 import requests
 import json
 import os
+import sys
 from bs4 import BeautifulSoup
+import logging
+from http.client import HTTPConnection
+HTTPConnection.debuglevel = 0
+
+logging.getLogger("requests").setLevel(logging.WARNING)
+logging.getLogger("urllib3").setLevel(logging.WARNING)
+logging.getLogger("urllib3.connectionpool").setLevel(logging.WARNING)
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(dir_path + "/")
 
 logger = VyLogger("default")
 
