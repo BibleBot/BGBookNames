@@ -22,6 +22,8 @@ import json
 import os
 from bs4 import BeautifulSoup
 
+dir_path = os.path.dirname(os.path.realpath(__file__))
+
 logger = VyLogger("default")
 
 versionsURL = "https://www.biblegateway.com/versions/"
@@ -194,11 +196,11 @@ def getBooks():
                                     if tableField.text not in bookNames[book]:
                                         bookNames[book].append(tableField.text)
 
-        if os.path.isfile("books.txt"):
+        if os.path.isfile(dir_path + "/books.txt"):
             logMessage("info", "Found books.txt, removing...")
-            os.remove("books.txt")
+            os.remove(dir_path + "/books.txt")
 
-        with open("books.txt", "w") as file:
+        with open(dir_path + "/books.txt", "w") as file:
             logMessage("info", "Writing file...")
             file.write(json.dumps(bookNames))
 
