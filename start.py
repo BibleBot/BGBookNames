@@ -16,6 +16,7 @@
     along with BGBookNames.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+import asyncio
 import requests
 import json
 import os
@@ -37,6 +38,7 @@ from vylogger import VyLogger
 logger = VyLogger("default")
 
 versionsURL = "https://www.biblegateway.com/versions/"
+extensionsURL = "https://abbv.biblebot.xyz/extensions.json"
 
 bookNames = {
     "gen": [],
@@ -149,7 +151,7 @@ def logMessage(level, msg):
         logger.debug(message)
 
 
-def getBooks():
+async def getBooks():
     if res is not None:
         soup = BeautifulSoup(res.text, "html.parser")
 
