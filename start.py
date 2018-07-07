@@ -59,7 +59,7 @@ bookNames = {
     "neh": [],
     "esth": [],
     "job": [],
-    "ps": [],
+    "ps": ["Psalms"],
     "prov": [],
     "eccl": [],
     "song": [],
