@@ -151,7 +151,7 @@ def logMessage(level, msg):
         logger.debug(message)
 
 
-async def getBooks():
+def getBooks():
     if res is not None:
         soup = BeautifulSoup(res.text, "html.parser")
 
