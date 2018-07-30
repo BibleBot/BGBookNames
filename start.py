@@ -33,7 +33,7 @@ logging.getLogger("urllib3.connectionpool").setLevel(logging.WARNING)
 dir_path = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(dir_path + "/")
 
-from vylogger import VyLogger
+from vylogger import VyLogger  # noqa: E501
 
 logger = VyLogger("default")
 
@@ -137,9 +137,8 @@ ignoredTranslations = ["Arabic Bible: Easy-to-Read Version (ERV-AR)", "Ketab El 
                        "Hawai‘i Pidgin (HWP)"]
 
 
-def logMessage(level, msg):
-    message = "[shard 0] <" + \
-        "BGBookNames@global> " + msg
+def log_message(level, msg):
+    message = "[shard 0] <BGBookNames@global> " + msg
 
     if level == "warn":
         logger.warning(message)
@@ -151,11 +150,11 @@ def logMessage(level, msg):
         logger.debug(message)
 
 
-def getBooks():
+def get_books():
     if res is not None:
-        soup = BeautifulSoup(res.text, "html.parser")
+        soup = BeautifulSoup(res.text, "lxml")
 
-        logMessage("info", "Getting translations...")
+        log_message("info", "Getting translations...")
 
         for translation in soup.findAll("td", {"class": ["collapse", "translation-name"]}):
             for a in translation.findAll("a", href=True):
@@ -167,13 +166,13 @@ def getBooks():
                     obj[version]["booklist"] = "https://www.biblegateway.com" + link
 
         if obj is not {}:
-            logMessage("info", "Getting book names... (this will take a while)")
+            log_message("info", "Getting book names... (this will take a while)")
             for item in obj:
-                booklistURL = obj[item]["booklist"]
-                bookRes = requests.get(booklistURL)
+                booklist_url = obj[item]["booklist"]
+                book_res = requests.get(booklist_url)
 
-                if bookRes is not None:
-                    soup = BeautifulSoup(bookRes.text, "html.parser")
+                if book_res is not None:
+                    soup = BeautifulSoup(book_res.text, "html.parser")
 
                     table = soup.find("table", {"class": "chapterlinks"})
 
@@ -199,23 +198,23 @@ def getBooks():
                                     if tableField.text not in bookNames[book]:
                                         bookNames[book].append(tableField.text)
                             except KeyError:
-                                logMessage("err", "found " +
-                                           book + " in " + item)
-                                book = input(
-                                    "[bfix] what should I rename this book to?")
+                                log_message("err", "found " + book + " in " + item)
+                                book = input("[bfix] what should I rename this book to?")
 
                                 if not book == "":
                                     if tableField.text not in bookNames[book]:
                                         bookNames[book].append(tableField.text)
 
         if os.path.isfile(dir_path + "/books.json"):
-            logMessage("info", "Found books.json, removing...")
+            log_message("info", "Found books.json, removing...")
             os.remove(dir_path + "/books.json")
 
         with open(dir_path + "/books.json", "w") as file:
-            logMessage("info", "Writing file...")
+            log_message("info", "Writing file...")
             file.write(json.dumps(bookNames))
+
+        log_message("info", "Done.")
 
 
 if __name__ == "__main__":
-    getBooks()
+    get_books()
