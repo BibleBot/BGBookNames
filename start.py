@@ -40,7 +40,7 @@ logger = VyLogger("default")
 versionsURL = "https://www.biblegateway.com/versions/"
 extensionsURL = "https://abbv.biblebot.xyz/extensions.json"
 
-bookNames = {
+book_names = {
     "gen": [],
     "exod": [],
     "lev": [],
@@ -176,15 +176,15 @@ def get_books():
 
                     table = soup.find("table", {"class": "chapterlinks"})
 
-                    for tableField in table.findAll("td"):
-                        book = dict(tableField.attrs).get("data-target")
+                    for table_field in table.findAll("td"):
+                        book = dict(table_field.attrs).get("data-target")
 
-                        for chapterNumbers in tableField.findAll("span", {"class": "num-chapters"}):
-                            chapterNumbers.decompose()
+                        for chapter_numbers in table_field.findAll("span", {"class": "num-chapters"}):
+                            chapter_numbers.decompose()
 
                         if not str(book) == "None":
                             book = book[1:-5]
-                            classes = dict(tableField.attrs).get("class")
+                            classes = dict(table_field.attrs).get("class")
 
                             try:
                                 if book == "3macc":
@@ -195,15 +195,15 @@ def get_books():
                                     book = "praz"
 
                                 if "book-name" in classes:
-                                    if tableField.text not in bookNames[book]:
-                                        bookNames[book].append(tableField.text)
+                                    if table_field.text not in book_names[book]:
+                                        book_names[book].append(table_field.text)
                             except KeyError:
                                 log_message("err", "found " + book + " in " + item)
                                 book = input("[bfix] what should I rename this book to?")
 
                                 if not book == "":
-                                    if tableField.text not in bookNames[book]:
-                                        bookNames[book].append(tableField.text)
+                                    if table_field.text not in book_names[book]:
+                                        book_names[book].append(table_field.text)
 
         if os.path.isfile(dir_path + "/books.json"):
             log_message("info", "Found books.json, removing...")
@@ -211,7 +211,7 @@ def get_books():
 
         with open(dir_path + "/books.json", "w") as file:
             log_message("info", "Writing file...")
-            file.write(json.dumps(bookNames))
+            file.write(json.dumps(book_names))
 
         log_message("info", "Done.")
 

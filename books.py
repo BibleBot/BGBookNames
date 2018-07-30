@@ -16,7 +16,7 @@
     along with BGBookNames.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-itemToBook = {
+item_to_book = {
     "ot": {
         "gen": "Genesis",
         "exod": "Exodus",
