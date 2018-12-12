@@ -10,6 +10,6 @@ git clone https://github.com/BibleBot/BGBookNames
 cd BGBookNames
 python3 -m venv venv
 source venv/bin/activate
-pip install -r requirements.txt
+pip install -U bs4 colorama lxml requests
 python src/start.py
 ```
