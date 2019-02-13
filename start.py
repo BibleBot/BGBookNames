@@ -1,20 +1,20 @@
-'''
+"""
     Copyright (c) 2018-2019 Elliott Pardee <me [at] vypr [dot] xyz>
-    This file is part of BGBookNames.
+    This file is part of name_scraper.
 
-    BGBookNames is free software: you can redistribute it and/or modify
+    name_scraper is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    BGBookNames is distributed in the hope that it will be useful,
+    name_scraper is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with BGBookNames.  If not, see <http://www.gnu.org/licenses/>.
-'''
+    along with name_scraper.  If not, see <http://www.gnu.org/licenses/>.
+"""
 
 import requests
 import json
@@ -35,8 +35,6 @@ sys.path.append(dir_path + "/")
 from vylogger import VyLogger  # noqa: E501
 
 logger = VyLogger("default")
-
-versionsURL = "https://www.biblegateway.com/versions/"
 
 book_names = {
     "gen": ["Gen", "Ge", "Gn"],
@@ -125,18 +123,9 @@ book_names = {
     "4ma": ["4 Macc", "4 Mac", "4th Maccabees", "4th Macc", "4th Mac"],
 }
 
-res = requests.get(versionsURL)
 
-obj = {}
-
-ignoredTranslations = ["Arabic Bible: Easy-to-Read Version (ERV-AR)", "Ketab El Hayat (NAV)",
-                       "Farsi New Testament", "Farsi Ebook Bible", "Habrit Hakhadasha/Haderekh (HHH)",
-                       "The Westminster Leningrad Codex (WLC)", "Urdu Bible: Easy-to-Read Version (ERV-UR)",
-                       "Hawai‘i Pidgin (HWP)"]
-
-
-def log_message(level, msg):
-    message = "[shard 0] <BGBookNames@global> " + msg
+def log_message(level, source, msg):
+    message = f"[shard 0] <{source}@name_scraper> {msg}"
 
     if level == "warn":
         logger.warning(message)
@@ -148,71 +137,110 @@ def log_message(level, msg):
         logger.debug(message)
 
 
-def get_books():
+def get_bible_gateway_translations():
+    res = requests.get("https://www.biblegateway.com/versions/")
+    translations = {}
+    ignored = ["Arabic Bible: Easy-to-Read Version (ERV-AR)", "Ketab El Hayat (NAV)", "Farsi New Testament",
+               "Farsi Ebook Bible", "Habrit Hakhadasha/Haderekh (HHH)", "The Westminster Leningrad Codex (WLC)",
+               "Urdu Bible: Easy-to-Read Version (ERV-UR)", "Hawai‘i Pidgin (HWP)"]
+
     if res is not None:
         soup = BeautifulSoup(res.text, "lxml")
 
-        log_message("info", "Getting translations...")
-
-        for translation in soup.findAll("td", {"class": ["collapse", "translation-name"]}):
-            for a in translation.findAll("a", href=True):
+        for translation in soup.find_all("td", {"class": ["collapse", "translation-name"]}):
+            for a in translation.find_all("a", href=True):
                 version = a.text
                 link = a["href"]
 
-                if "#booklist" in link and version not in ignoredTranslations:
-                    obj[version] = {}
-                    obj[version]["booklist"] = "https://www.biblegateway.com" + link
+                if "#booklist" in link and version not in ignored:
+                    translations[version] = {}
+                    translations[version]["booklist"] = "https://www.biblegateway.com" + link
 
-        if obj is not {}:
-            log_message("info", "Getting book names... (this will take approx. 2-3 minutes)")
-            for item in obj:
-                booklist_url = obj[item]["booklist"]
-                book_res = requests.get(booklist_url)
+        return translations
 
-                if book_res is not None:
-                    soup = BeautifulSoup(book_res.text, "html.parser")
 
-                    table = soup.find("table", {"class": "chapterlinks"})
+def get_bible_gateway_names(translations):
+    if translations is not {}:
+        for item in obj:
+            booklist_url = obj[item]["booklist"]
+            book_res = requests.get(booklist_url)
 
-                    for table_field in table.findAll("td"):
-                        book = dict(table_field.attrs).get("data-target")
+            if book_res is not None:
+                soup = BeautifulSoup(book_res.text, "lxml")
 
-                        for chapter_numbers in table_field.findAll("span", {"class": "num-chapters"}):
-                            chapter_numbers.decompose()
+                table = soup.find("table", {"class": "chapterlinks"})
 
-                        if not str(book) == "None":
-                            book = book[1:-5]
-                            classes = dict(table_field.attrs).get("class")
+                for table_field in table.find_all("td"):
+                    book = dict(table_field.attrs).get("data-target")
 
-                            try:
-                                if book == "3macc":
-                                    book = "3ma"
-                                elif book == "gkesth" or book == "adest":
-                                    book = "gkest"
-                                elif book == "sgthree" or book == "sgthr":
-                                    book = "praz"
+                    for chapter_numbers in table_field.find_all("span", {"class": "num-chapters"}):
+                        chapter_numbers.decompose()
 
-                                if "book-name" in classes:
-                                    if table_field.text not in book_names[book]:
-                                        book_names[book].append(table_field.text)
-                            except KeyError:
-                                log_message("err", "found " + book + " in " + item)
-                                book = input("[bfix] what should I rename this book to?")
+                    if not str(book) == "None":
+                        book = book[1:-5]
+                        classes = dict(table_field.attrs).get("class")
 
-                                if not book == "":
-                                    if table_field.text not in book_names[book]:
-                                        book_names[book].append(table_field.text)
+                        try:
+                            if book in ["3macc", "4macc"]:
+                                book = book[0:-2]
+                            elif book in ["gkesth", "adest"]:
+                                book = "gkest"
+                            elif book in ["sgthree", "sgthr", "prazar"]:
+                                book = "praz"
 
-        if os.path.isfile(dir_path + "/books.json"):
-            log_message("info", "Found books.json, removing...")
-            os.remove(dir_path + "/books.json")
+                            if "book-name" in classes:
+                                if table_field.text not in book_names[book]:
+                                    book_names[book].append(table_field.text)
+                        except KeyError:
+                            book = input(f"[bfix] found `{book}` in {item}, what should I rename this book to?")
 
-        with open(dir_path + "/books.json", "w") as file:
-            log_message("info", "Writing file...")
-            file.write(json.dumps(book_names))
-            log_message("info", "Write successful.")
+                            if not book == "":
+                                if table_field.text not in book_names[book]:
+                                    book_names[book].append(table_field.text)
 
-        log_message("info", "Done.")
+
+def get_apibible_translations(api_key):
+    headers = {"api-key": api_key}
+    res = requests.get("https://api.scripture.api.bible/v1/bibles", headers=headers)
+    translations = []
+
+    if res is not None:
+        data = res.json()
+        data = data["data"]
+
+        for entry in data:
+            translations.append(entry["id"])
+
+    return translations
+
+
+def get_apibible_names(translations, api_key):
+    pass  # TODO: this, requires a new mapping dict as the current one is oriented around Bible Gateway's ids
+
+
+def get_books(apibible_key=None):
+    log_message("info", "bible_gateway", "Getting translations...")
+    translations = get_bible_gateway_translations()
+
+    log_message("info", "bible_gateway", "Getting book names...")
+    get_bible_gateway_names(translations)
+
+    if apibible_key:
+        log_message("info", "apibible", "Getting translations...")
+        translations = get_apibible_translations(apibible_key)
+
+        log_message("info", "apibible", "Getting book names...")
+        get_apibible_names(translations, apibible_key)
+
+    if os.path.isfile(dir_path + "/books.json"):
+        log_message("info", "global", "Found books.json, removing...")
+        os.remove(dir_path + "/books.json")
+
+    with open(dir_path + "/books.json", "w") as file:
+        log_message("info", "global", "Writing books.json...")
+        file.write(json.dumps(book_names))
+
+    log_message("info", "global", "Done.")
 
 
 if __name__ == "__main__":
