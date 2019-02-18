@@ -5,11 +5,4 @@ A quick way of getting all the book names from all the versions of Bible Gateway
 
 ## Installation
 
-```bash
-git clone https://github.com/BibleBot/name_scraper
-cd name_scraper
-python3 -m venv venv
-source venv/bin/activate
-pip install -U bs4 colorama lxml requests
-python src/start.py
-```
+`pip install name_scraper`
