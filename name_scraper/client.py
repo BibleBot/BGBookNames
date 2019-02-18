@@ -163,14 +163,12 @@ def get_apibible_names(versions, api_key):
 
                             if apibible_name is not None:
                                 apibible_name = apibible_name.strip()
-                                print(f"\"{apibible_name}\"")
 
                                 if apibible_name not in master_map[master_name]:
                                     master_map[master_name].append(apibible_name)
 
                             if apibible_abbv is not None:
                                 apibible_abbv = apibible_abbv.strip()
-                                print(f"\"{apibible_abbv}\"")
 
                                 if apibible_abbv not in master_map[master_name]:
                                     master_map[master_name].append(apibible_abbv)
