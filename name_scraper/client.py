@@ -159,13 +159,13 @@ def get_apibible_names(versions, api_key):
                         try:
                             master_name = apibible_map[apibible_id]
 
-                            if apibible_name:
+                            if apibible_name is not None:
                                 apibible_name = apibible_name.lstrip().rstrip()
 
                                 if apibible_name not in master_map[master_name]:
                                     master_map[master_name].append(apibible_name)
 
-                            if apibible_abbv:
+                            if apibible_abbv is not None:
                                 apibible_abbv = apibible_abbv.lstrip().rstrip()
 
                                 if apibible_abbv not in master_map[master_name]:
@@ -191,12 +191,12 @@ def update_books(apibible_key=None):
         log_message("info", "apibible", "Getting book names...")
         get_apibible_names(versions, apibible_key)
 
-    if os.path.isfile(f"{dir_path}/mappings/master.json"):
-        log_message("info", "global", "Removing old master.json file...")
-        os.remove(f"{dir_path}/mappings/master.json")
+    if os.path.isfile(f"{dir_path}/mappings/combine.json"):
+        log_message("info", "global", "Removing old combine.json file...")
+        os.remove(f"{dir_path}/mappings/combine.json")
 
-    with open(f"{dir_path}/mappings/master.json", "w") as file:
-        log_message("info", "global", "Writing new master.json file...")
+    with open(f"{dir_path}/mappings/combine.json", "w") as file:
+        log_message("info", "global", "Writing new combine.json file...")
         file.write(json.dumps(master_map))
 
     log_message("info", "global", "Done.")
