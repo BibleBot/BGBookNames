@@ -112,7 +112,9 @@ def get_bible_gateway_names(versions):
 
                                 if "book-name" in classes:
                                     if table_field.text not in master_map[book]:
-                                        master_map[book].append(table_field.text)
+                                        name = table_field.text.strip()
+
+                                        master_map[book].append(name)
                             except KeyError:
                                 log_message("info", "bible_gateway", f"Inconsistency found: `{book}` in {item},"
                                             "please file an issue on GitHub or notify vypr#0001 on Discord.")
@@ -161,12 +163,14 @@ def get_apibible_names(versions, api_key):
 
                             if apibible_name is not None:
                                 apibible_name = apibible_name.strip()
+                                print(f"\"{apibible_name}\"")
 
                                 if apibible_name not in master_map[master_name]:
                                     master_map[master_name].append(apibible_name)
 
                             if apibible_abbv is not None:
                                 apibible_abbv = apibible_abbv.strip()
+                                print(f"\"{apibible_abbv}\"")
 
                                 if apibible_abbv not in master_map[master_name]:
                                     master_map[master_name].append(apibible_abbv)
