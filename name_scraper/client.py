@@ -111,9 +111,9 @@ def get_bible_gateway_names(versions):
                                     book = "praz"
 
                                 if "book-name" in classes:
-                                    if table_field.text not in master_map[book]:
-                                        name = table_field.text.strip()
+                                    name = table_field.text.strip()
 
+                                    if name not in master_map[book]:
                                         master_map[book].append(name)
                             except KeyError:
                                 log_message("info", "bible_gateway", f"Inconsistency found: `{book}` in {item},"
