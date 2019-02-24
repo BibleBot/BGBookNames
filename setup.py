@@ -2,12 +2,13 @@ from setuptools import setup
 
 setup(
     name="name_scraper",
-    version="1.0.8",
+    version="1.0.9",
     author="Elliott Pardee",
     author_email="me@vypr.xyz",
     url="https://github.com/BibleBot/name_scraper",
     license="GPLv3",
-    packages=["name_scraper"],
+    packages=["name_scraper", "name_scraper.ext"],
+    data_files=[("mappings", ["name_scraper/mappings/master.json", "name_scraper/mappings/apibible.json"])],
     description="A scraping interface to fetch Bible book names from Bible Gateway and API.Bible.",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
