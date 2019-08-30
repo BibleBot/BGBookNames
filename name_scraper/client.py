@@ -105,7 +105,7 @@ def get_bible_gateway_names(versions):
                             try:
                                 if book in ["3macc", "4macc"]:
                                     book = book[0:-2]
-                                elif book in ["gkesth", "adest"]:
+                                elif book in ["gkesth", "adest", "addesth"]:
                                     book = "gkest"
                                 elif book in ["sgthree", "sgthr", "prazar"]:
                                     book = "praz"
@@ -116,7 +116,7 @@ def get_bible_gateway_names(versions):
                                     if name not in master_map[book]:
                                         master_map[book].append(name)
                             except KeyError:
-                                log_message("info", "bible_gateway", f"Inconsistency found: `{book}` in {item},"
+                                log_message("info", "bible_gateway", f"Inconsistency found: `{book}` in {item}, "
                                             "please file an issue on GitHub or notify vypr#0001 on Discord.")
 
 
