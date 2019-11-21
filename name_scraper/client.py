@@ -16,7 +16,7 @@
     along with name_scraper.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import requests
+import aiohttp
 import json
 import os
 import sys
@@ -26,7 +26,7 @@ import logging
 from http.client import HTTPConnection
 HTTPConnection.debuglevel = 0
 
-logging.getLogger("requests").setLevel(logging.WARNING)
+logging.getLogger("aiohttp").setLevel(logging.WARNING)
 logging.getLogger("urllib3").setLevel(logging.WARNING)
 logging.getLogger("urllib3.connectionpool").setLevel(logging.WARNING)
 
@@ -57,89 +57,92 @@ def log_message(level, source, msg):
         logger.debug(message)
 
 
-def get_bible_gateway_versions():
-    res = requests.get("https://www.biblegateway.com/versions/")
+async def get_bible_gateway_versions():
     versions = {}
     ignored = ["Arabic Bible: Easy-to-Read Version (ERV-AR)", "Ketab El Hayat (NAV)", "Farsi New Testament",
                "Farsi Ebook Bible", "Habrit Hakhadasha/Haderekh (HHH)", "The Westminster Leningrad Codex (WLC)",
                "Urdu Bible: Easy-to-Read Version (ERV-UR)", "Hawai‘i Pidgin (HWP)"]
 
-    if res is not None:
-        soup = BeautifulSoup(res.text, "lxml")
+    async with aiohttp.ClientSession() as session:
+        async with session.get("https://www.biblegateway.com/versions/") as res:
+            if res is not None:
+                soup = BeautifulSoup(await res.text(), "lxml")
 
-        with click.progressbar(soup.find_all("td", {"class": ["collapse", "translation-name"]})) as bar:
-            for version in bar:
-                for a in version.find_all("a", href=True):
-                    version_name = a.text
-                    link = a["href"]
+                with click.progressbar(soup.find_all("td", {"class": ["collapse", "translation-name"]})) as bar:
+                    for version in bar:
+                        for a in version.find_all("a", href=True):
+                            version_name = a.text
+                            link = a["href"]
 
-                    if "#booklist" in link and version_name not in ignored:
-                        versions[version_name] = {}
-                        versions[version_name]["booklist"] = "https://www.biblegateway.com" + link
+                            if "#booklist" in link and version_name not in ignored:
+                                versions[version_name] = {}
+                                versions[version_name]["booklist"] = "https://www.biblegateway.com" + link
 
-        return versions
+                return versions
 
 
-def get_bible_gateway_names(versions):
+async def get_bible_gateway_names(versions):
     if versions is not {}:
         with click.progressbar(versions) as bar:
             for item in bar:
                 booklist_url = versions[item]["booklist"]
-                book_res = requests.get(booklist_url)
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(booklist_url) as book_res:
+                        if book_res is not None:
+                            soup = BeautifulSoup(await book_res.text(), "lxml")
 
-                if book_res is not None:
-                    soup = BeautifulSoup(book_res.text, "lxml")
+                            table = soup.find("table", {"class": "chapterlinks"})
 
-                    table = soup.find("table", {"class": "chapterlinks"})
+                            for table_field in table.find_all("td"):
+                                book = dict(table_field.attrs).get("data-target")
 
-                    for table_field in table.find_all("td"):
-                        book = dict(table_field.attrs).get("data-target")
+                                for chapter_numbers in table_field.find_all("span", {"class": "num-chapters"}):
+                                    chapter_numbers.decompose()
 
-                        for chapter_numbers in table_field.find_all("span", {"class": "num-chapters"}):
-                            chapter_numbers.decompose()
+                                if not str(book) == "None":
+                                    book = book[1:-5]
+                                    classes = dict(table_field.attrs).get("class")
 
-                        if not str(book) == "None":
-                            book = book[1:-5]
-                            classes = dict(table_field.attrs).get("class")
+                                    try:
+                                        if book in ["3macc", "4macc"]:
+                                            book = book[0:-2]
+                                        elif book in ["gkesth", "adest", "addesth"]:
+                                            book = "gkest"
+                                        elif book in ["sgthree", "sgthr", "prazar"]:
+                                            book = "praz"
 
-                            try:
-                                if book in ["3macc", "4macc"]:
-                                    book = book[0:-2]
-                                elif book in ["gkesth", "adest", "addesth"]:
-                                    book = "gkest"
-                                elif book in ["sgthree", "sgthr", "prazar"]:
-                                    book = "praz"
+                                        if "book-name" in classes:
+                                            name = table_field.text.strip()
 
-                                if "book-name" in classes:
-                                    name = table_field.text.strip()
-
-                                    if name not in master_map[book]:
-                                        master_map[book].append(name)
-                            except KeyError:
-                                log_message("info", "bible_gateway", f"Inconsistency found: `{book}` in {item}, "
-                                            "please file an issue on GitHub or notify vypr#0001 on Discord.")
+                                            if name not in master_map[book]:
+                                                master_map[book].append(name)
+                                    except KeyError:
+                                        log_message("info", "bible_gateway", f"Inconsistency found: `{book}` in {item}, "
+                                                    "please file an issue on GitHub or notify vypr#0001 on Discord.")
 
 
-def get_apibible_versions(api_key):
+async def get_apibible_versions(api_key):
     headers = {"api-key": api_key}
-    res = requests.get("https://api.scripture.api.bible/v1/bibles", headers=headers)
-    versions = []
 
-    if res is not None:
-        data = res.json()
-        data = data["data"]
+    async with aiohttp.ClientSession() as session:
+        async with session.get("https://api.scripture.api.bible/v1/bibles", headers=headers) as res:
+            versions = []
 
-        with click.progressbar(data) as bar:
-            for entry in bar:
-                versions.append({
-                    "id": entry["id"],
-                    "name": entry["name"]
-                })
+            if res is not None:
+                data = await res.json()
+                data = data["data"]
 
-    return versions
+                with click.progressbar(data) as bar:
+                    for entry in bar:
+                        versions.append({
+                            "id": entry["id"],
+                            "name": entry["name"]
+                        })
+
+            return versions
 
 
-def get_apibible_names(versions, api_key):
+async def get_apibible_names(versions, api_key):
     if versions is not {}:
         with click.progressbar(versions) as bar:
             for version in bar:
@@ -147,51 +150,51 @@ def get_apibible_names(versions, api_key):
                 version_name = version["name"]
 
                 headers = {"api-key": api_key}
-                res = requests.get(f"https://api.scripture.api.bible/v1/bibles/{version_id}/books", headers=headers)
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(f"https://api.scripture.api.bible/v1/bibles/{version_id}/books", headers=headers) as res:
+                        if res is not None:
+                            data = await res.json()
+                            data = data["data"]
 
-                if res is not None:
-                    data = res.json()
-                    data = data["data"]
+                            for entry in data:
+                                apibible_id = entry["id"]
+                                apibible_name = entry["name"]
+                                apibible_abbv = entry["abbreviation"]
 
-                    for entry in data:
-                        apibible_id = entry["id"]
-                        apibible_name = entry["name"]
-                        apibible_abbv = entry["abbreviation"]
+                                try:
+                                    master_name = apibible_map[apibible_id]
 
-                        try:
-                            master_name = apibible_map[apibible_id]
+                                    if apibible_name is not None:
+                                        apibible_name = apibible_name.strip()
 
-                            if apibible_name is not None:
-                                apibible_name = apibible_name.strip()
+                                        if apibible_name not in master_map[master_name]:
+                                            master_map[master_name].append(apibible_name)
 
-                                if apibible_name not in master_map[master_name]:
-                                    master_map[master_name].append(apibible_name)
+                                    if apibible_abbv is not None:
+                                        apibible_abbv = apibible_abbv.strip()
 
-                            if apibible_abbv is not None:
-                                apibible_abbv = apibible_abbv.strip()
-
-                                if apibible_abbv not in master_map[master_name]:
-                                    master_map[master_name].append(apibible_abbv)
-                        except KeyError:
-                            if apibible_id != "DAG":
-                                log_message("info", "apibible",
-                                            f"Inconsistency found: `{apibible_id}` in {version_name}, "
-                                            f"book name: `{apibible_name}`.")
+                                        if apibible_abbv not in master_map[master_name]:
+                                            master_map[master_name].append(apibible_abbv)
+                                except KeyError:
+                                    if apibible_id != "DAG":
+                                        log_message("info", "apibible",
+                                                    f"Inconsistency found: `{apibible_id}` in {version_name}, "
+                                                    f"book name: `{apibible_name}`.")
 
 
-def update_books(apibible_key=None):
+async def update_books(apibible_key=None):
     log_message("info", "bible_gateway", "Getting versions...")
-    versions = get_bible_gateway_versions()
+    versions = await get_bible_gateway_versions()
 
     log_message("info", "bible_gateway", "Getting book names...")
-    get_bible_gateway_names(versions)
+    await get_bible_gateway_names(versions)
 
     if apibible_key:
         log_message("info", "apibible", "Getting versions...")
-        versions = get_apibible_versions(apibible_key)
+        versions = await get_apibible_versions(apibible_key)
 
         log_message("info", "apibible", "Getting book names...")
-        get_apibible_names(versions, apibible_key)
+        await get_apibible_names(versions, apibible_key)
 
     if os.path.isfile(f"{dir_path}/mappings/combine.json"):
         log_message("info", "global", "Removing old combine.json file...")
