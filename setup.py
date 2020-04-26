@@ -2,9 +2,9 @@ from setuptools import setup
 
 setup(
     name="name_scraper",
-    version="1.1.2",
+    version="1.1.3",
     author="Elliott Pardee",
-    author_email="me@vypr.xyz",
+    author_email="me@thevypr.com",
     url="https://github.com/BibleBot/name_scraper",
     license="GPLv3",
     packages=["name_scraper", "name_scraper.ext"],
