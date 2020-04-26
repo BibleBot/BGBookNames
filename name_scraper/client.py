@@ -118,7 +118,7 @@ async def get_bible_gateway_names(versions):
                                                 master_map[book].append(name)
                                     except KeyError:
                                         log_message("info", "bible_gateway", f"Inconsistency found: `{book}` in {item}, "
-                                                    "please file an issue on GitHub or notify vypr#0001 on Discord.")
+                                                    "please file an issue on GitHub.")
 
 
 async def get_apibible_versions(api_key):
@@ -182,27 +182,38 @@ async def get_apibible_names(versions, api_key):
                                                     f"book name: `{apibible_name}`.")
 
 
-async def update_books(apibible_key=None):
-    log_message("info", "bible_gateway", "Getting versions...")
-    versions = await get_bible_gateway_versions()
+async def update_books(apibible_key=None, dry=False):
+    if not dry:
+        log_message("info", "bible_gateway", "Getting versions...")
+        versions = await get_bible_gateway_versions()
 
-    log_message("info", "bible_gateway", "Getting book names...")
-    await get_bible_gateway_names(versions)
+        log_message("info", "bible_gateway", "Getting book names...")
+        await get_bible_gateway_names(versions)
 
-    if apibible_key:
-        log_message("info", "apibible", "Getting versions...")
-        versions = await get_apibible_versions(apibible_key)
+        if apibible_key:
+            log_message("info", "apibible", "Getting versions...")
+            versions = await get_apibible_versions(apibible_key)
 
-        log_message("info", "apibible", "Getting book names...")
-        await get_apibible_names(versions, apibible_key)
+            log_message("info", "apibible", "Getting book names...")
+            await get_apibible_names(versions, apibible_key)
 
-    if os.path.isfile(f"{dir_path}/mappings/combine.json"):
-        log_message("info", "global", "Removing old combine.json file...")
-        os.remove(f"{dir_path}/mappings/combine.json")
+        if os.path.isfile(f"{dir_path}/mappings/combine.json"):
+            log_message("info", "global", "Removing old names file...")
+            os.remove(f"{dir_path}/mappings/combine.json")
 
-    with open(f"{dir_path}/mappings/combine.json", "w") as file:
-        log_message("info", "global", "Writing new combine.json file...")
-        file.write(json.dumps(master_map))
+        with open(f"{dir_path}/mappings/combine.json", "w") as file:
+            log_message("info", "global", "Writing new names file...")
+            file.write(json.dumps(master_map))
+    else:
+        log_message("info", "global", "Checking for existing names file...")
+
+        if os.path.isfile(f"{dir_path}/mappings/combine.json"):
+            log_message("info", "global", "Existing names file found, linking...")
+
+            master_map = open(f"{dir_path}/mappings/combine.json")
+            master_map = json.load(master_map)
+        else:
+            log_message("info", "global", "Names file not found, please run with dry=False to update.")
 
     log_message("info", "global", "Done.")
 
