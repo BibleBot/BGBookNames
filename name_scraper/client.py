@@ -37,8 +37,8 @@ from ext.vylogger import VyLogger  # noqa: E501
 
 logger = VyLogger("default")
 
-global master_map = json.load(open(f"{dir_path}/mappings/master.json"))
-global apibible_map = json.load(open(f"{dir_path}/mappings/apibible.json"))
+master_map = json.load(open(f"{dir_path}/mappings/master.json"))
+apibible_map = json.load(open(f"{dir_path}/mappings/apibible.json"))
 
 
 def log_message(level, source, msg):
@@ -79,6 +79,8 @@ async def get_bible_gateway_versions():
 
 
 async def get_bible_gateway_names(versions):
+    global master_map
+    
     if versions is not {}:
         with click.progressbar(versions) as bar:
             for item in bar:
@@ -140,6 +142,9 @@ async def get_apibible_versions(api_key):
 
 
 async def get_apibible_names(versions, api_key):
+    global master_map
+    global apibible_map
+
     if versions is not {}:
         with click.progressbar(versions) as bar:
             for version in bar:
@@ -180,6 +185,8 @@ async def get_apibible_names(versions, api_key):
 
 
 async def update_books(apibible_key=None, dry=False):
+    global master_map
+
     if not dry:
         log_message("info", "bible_gateway", "Getting versions...")
         versions = await get_bible_gateway_versions()
