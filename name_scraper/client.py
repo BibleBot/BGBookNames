@@ -37,11 +37,8 @@ from ext.vylogger import VyLogger  # noqa: E501
 
 logger = VyLogger("default")
 
-master_map = open(f"{dir_path}/mappings/master.json")
-master_map = json.load(master_map)
-
-apibible_map = open(f"{dir_path}/mappings/apibible.json")
-apibible_map = json.load(apibible_map)
+global master_map = json.load(open(f"{dir_path}/mappings/master.json"))
+global apibible_map = json.load(open(f"{dir_path}/mappings/apibible.json"))
 
 
 def log_message(level, source, msg):
