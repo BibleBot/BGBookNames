@@ -55,7 +55,7 @@ def log_message(level, source, msg):
 
 
 def is_nuisance(word):
-    nuisances = ["pet", "in"]
+    nuisances = ["pet", "in", "pet.", "in."]
 
     if word.lower() in nuisances:
         return True
