@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="name_scraper",
-    version="1.1.5",
+    version="1.1.6",
     author="Elliott Pardee",
     author_email="me@thevypr.com",
     url="https://github.com/BibleBot/name_scraper",

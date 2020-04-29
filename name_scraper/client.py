@@ -54,6 +54,15 @@ def log_message(level, source, msg):
         logger.debug(message)
 
 
+def is_nuisance(word):
+    nuisances = ["pet", "in"]
+
+    if word.lower() in nuisances:
+        return True
+    
+    return False
+
+
 async def get_bible_gateway_versions():
     versions = {}
     ignored = ["Arabic Bible: Easy-to-Read Version (ERV-AR)", "Ketab El Hayat (NAV)", "Farsi New Testament",
@@ -101,6 +110,7 @@ async def get_bible_gateway_names(versions):
                                 if not str(book) == "None":
                                     book = book[1:-5]
                                     classes = dict(table_field.attrs).get("class")
+                                    name = table_field.text.strip()
 
                                     try:
                                         if book in ["3macc", "4macc"]:
@@ -110,9 +120,7 @@ async def get_bible_gateway_names(versions):
                                         elif book in ["sgthree", "sgthr", "prazar"]:
                                             book = "praz"
 
-                                        if "book-name" in classes:
-                                            name = table_field.text.strip()
-
+                                        if "book-name" in classes and not is_nuisance(name):
                                             if name not in master_map[book]:
                                                 master_map[book].append(name)
                                     except KeyError:
