@@ -183,7 +183,7 @@ async def get_apibible_names(versions, api_key):
                                     if apibible_abbv is not None:
                                         apibible_abbv = apibible_abbv.strip()
 
-                                        if apibible_abbv not in master_map[master_name]:
+                                        if apibible_abbv not in master_map[master_name] and not is_nuisance(apibible_abbv):
                                             master_map[master_name].append(apibible_abbv)
                                 except KeyError:
                                     if apibible_id != "DAG":
