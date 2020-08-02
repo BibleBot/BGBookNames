@@ -104,8 +104,9 @@ async def get_bible_gateway_names(versions):
                             for table_field in table.find_all("td"):
                                 book = dict(table_field.attrs).get("data-target")
 
-                                for chapter_numbers in table_field.find_all("span", {"class": "num-chapters"}):
-                                    chapter_numbers.decompose()
+                                for span in table_field.find_all("span"):
+                                    span.decompose()
+                                
 
                                 if not str(book) == "None":
                                     book = book[1:-5]
