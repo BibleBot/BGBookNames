@@ -148,6 +148,7 @@ async def get_apibible_versions(api_key):
 
                 with click.progressbar(data) as bar:
                     for entry in bar:
+
                         versions.append({
                             "id": entry["id"],
                             "name": entry["name"]
@@ -183,12 +184,24 @@ async def get_apibible_names(versions, api_key):
 
                                     if apibible_name is not None:
                                         apibible_name = apibible_name.strip()
+                                        
+                                        if (master_name == "1sam" and apibible_name == "1 Kings") or (master_name == "2sam" and apibible_name == "2 Kings"):
+                                            continue
+
+                                        if (apibible_name in ["3 Kings", "4 Kings"]):
+                                            continue
 
                                         if apibible_name not in master_map[master_name]:
                                             master_map[master_name].append(apibible_name)
 
                                     if apibible_abbv is not None:
                                         apibible_abbv = apibible_abbv.strip()
+                                        
+                                        if (master_name == "1sam" and apibible_abbv == "1 Kings") or (master_name == "2sam" and apibible_abbv == "2 Kings"):
+                                            continue
+
+                                        if (apibible_abbv in ["3 Kings", "4 Kings"]):
+                                            continue
 
                                         if apibible_abbv not in master_map[master_name] and not is_nuisance(apibible_abbv):
                                             master_map[master_name].append(apibible_abbv)
