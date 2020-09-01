@@ -121,6 +121,12 @@ async def get_bible_gateway_names(versions):
                                         elif book in ["sgthree", "sgthr", "prazar"]:
                                             book = "praz"
 
+                                        if (book == "1sam" and name == "1 Kings") or (book == "2sam" and name == "2 Kings"):
+                                            continue
+
+                                        if (name in ["3 Kings", "4 Kings"]):
+                                            continue
+
                                         if "book-name" in classes and not is_nuisance(name):
                                             if name not in master_map[book]:
                                                 master_map[book].append(name)
